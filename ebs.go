@@ -98,8 +98,11 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 			break
 		}
 
-		log.Printf("Waiting for attachment to complete. Current state: %s", *volumes[0].Attachments[0].State)
-		b.Duration()
+		duration := b.Duration()
+		log.Printf("Waiting for attachment to complete. Retrying in %g seconds. Current state: %s",
+			duration.Seconds(),
+			*volumes[0].Attachments[0].State)
+		time.Sleep(duration)
 	}
 
 	log.Printf("Attached volume %s to instance %s as device %s\n",
