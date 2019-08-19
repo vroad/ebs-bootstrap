@@ -16,7 +16,6 @@ var (
 	blockDevice               string
 	awsRegion                 string
 	fileSystemFormatType      string
-	fileSystemFormatArguments string
 )
 
 func init() {
@@ -25,7 +24,6 @@ func init() {
 	flag.StringVar(&mountPoint, "mount-point", "/var/lib/etcd", "EBS volume mount point")
 	flag.StringVar(&blockDevice, "block-device", "/dev/xvdf", "Block device to attach as")
 	flag.StringVar(&fileSystemFormatType, "filesystem-type", "ext4", "Linux filesystem format type")
-	flag.StringVar(&fileSystemFormatArguments, "filesystem-arguments", "", "Linux filesystem format arguments")
 	flag.BoolVar(&useEBS, "use-ebs", true, "Use EBS instead of instance store")
 	flag.Parse()
 }
@@ -61,7 +59,7 @@ func main() {
 		}
 	}
 
-	if err := ensureVolumeInited(blockDevice, fileSystemFormatType, fileSystemFormatArguments); err != nil {
+	if err := ensureVolumeInited(blockDevice, fileSystemFormatType); err != nil {
 		panic(err)
 	}
 

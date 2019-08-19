@@ -111,7 +111,7 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 	return nil
 }
 
-func ensureVolumeInited(blockDevice, fileSystemFormatType, fileSystemFormatArguments string) error {
+func ensureVolumeInited(blockDevice, fileSystemFormatType) error {
 	log.Printf("Checking for existing filesystem on device: %s\n", blockDevice)
 
 	if err := exec.Command("sudo", "/usr/sbin/blkid", blockDevice).Run(); err == nil {
@@ -122,7 +122,7 @@ func ensureVolumeInited(blockDevice, fileSystemFormatType, fileSystemFormatArgum
 	log.Println("Filesystem not present")
 
 	// format volume here
-	cmd := exec.Command("sudo", "/usr/sbin/mkfs."+fileSystemFormatType, blockDevice, fileSystemFormatArguments)
+	cmd := exec.Command("sudo", "/usr/sbin/mkfs."+fileSystemFormatType, blockDevice)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	if err := cmd.Run(); err != nil {
 		return errors.Wrap(err, "mkfs."+fileSystemFormatType+" failed")
