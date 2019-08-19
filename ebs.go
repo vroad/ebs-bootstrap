@@ -71,7 +71,7 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 	}
 
 	b := &backoff.Backoff{
-		Min:    100 * time.Millisecond,
+		Min:    5 * time.Second,
 		Max:    100 * time.Second,
 		Factor: 2,
 		Jitter: false,
@@ -111,7 +111,7 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 	return nil
 }
 
-func ensureVolumeInited(blockDevice, fileSystemFormatType) error {
+func ensureVolumeInited(blockDevice, fileSystemFormatType string) error {
 	log.Printf("Checking for existing filesystem on device: %s\n", blockDevice)
 
 	if err := exec.Command("sudo", "/usr/sbin/blkid", blockDevice).Run(); err == nil {
