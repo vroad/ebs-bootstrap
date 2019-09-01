@@ -162,12 +162,3 @@ func ensureVolumeMounted(blockDevice, mountPoint string) error {
 
 	return errors.Wrap(err, "cannot mount or verify mount. cowardly refusing to continue")
 }
-
-func ensureVolumeWriteable(mountPoint string) error {
-	log.Printf("Ensuring %s is r/w by etcd\n", mountPoint)
-	if err := exec.Command("sudo", "/usr/bin/chown", "-R", "etcd:etcd", mountPoint).Run(); err != nil {
-		return errors.Wrapf(err, "cannot make %s writeable by etcd", mountPoint)
-	}
-
-	return nil
-}
