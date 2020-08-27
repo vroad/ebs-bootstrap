@@ -10,17 +10,17 @@ import (
 )
 
 var (
-	useEBS                    bool
-	ebsVolumeName             string
-	mountPoint                string
-	blockDevice               string
-	awsRegion                 string
-	fileSystemFormatType      string
+	useEBS               bool
+	ebsVolumeID          string
+	mountPoint           string
+	blockDevice          string
+	awsRegion            string
+	fileSystemFormatType string
 )
 
 func init() {
 	flag.StringVar(&awsRegion, "aws-region", "eu-west-1", "AWS region this instance is on")
-	flag.StringVar(&ebsVolumeName, "ebs-volume-name", "", "EBS volume to attach to this node")
+	flag.StringVar(&ebsVolumeID, "ebs-volume-id", "", "EBS volume to attach to this node")
 	flag.StringVar(&mountPoint, "mount-point", "/data", "EBS volume mount point")
 	flag.StringVar(&blockDevice, "block-device", "/dev/xvdf", "Block device to attach as")
 	flag.StringVar(&fileSystemFormatType, "filesystem-type", "ext4", "Linux filesystem format type")
@@ -43,7 +43,7 @@ func main() {
 	}
 
 	if useEBS {
-		volume, err := volumeFromName(ec2SVC, ebsVolumeName, availabilityZone)
+		volume, err := volumeFromID(ec2SVC, ebsVolumeID, availabilityZone)
 		if err != nil {
 			panic(err)
 		}

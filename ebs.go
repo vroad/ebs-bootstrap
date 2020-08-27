@@ -15,12 +15,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-func volumeFromName(svc *ec2.EC2, volumeName, az string) (*ec2.Volume, error) {
+func volumeFromID(svc *ec2.EC2, volumeID, az string) (*ec2.Volume, error) {
 	input := &ec2.DescribeVolumesInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("tag:Name"),
-				Values: []*string{aws.String(volumeName)},
+				Name:   aws.String("volume-id"),
+				Values: []*string{aws.String(volumeID)},
 			},
 			{
 				Name:   aws.String("availability-zone"),
@@ -38,10 +38,10 @@ func volumeFromName(svc *ec2.EC2, volumeName, az string) (*ec2.Volume, error) {
 	}
 
 	if len(result.Volumes) == 0 {
-		return nil, fmt.Errorf("cannot find volume-id with name: %s", volumeName)
+		return nil, fmt.Errorf("cannot find volume with volume-id: %s", volumeID)
 	}
 
-	log.Printf("Resolved volume %s to %s\n", volumeName, *result.Volumes[0].VolumeId)
+	log.Printf("Found volume-id %s\n", volumeID)
 
 	return result.Volumes[0], nil
 }
