@@ -62,14 +62,6 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 		VolumeId:   volume.VolumeId,
 	}
 
-	_, err := svc.AttachVolume(input)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			return aerr
-		}
-		return err
-	}
-
 	b := &backoff.Backoff{
 		Min:    5 * time.Second,
 		Max:    100 * time.Second,
@@ -77,12 +69,36 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 		Jitter: false,
 	}
 
-	for {
+	var attachStarted = false
+	var attachSucceeded = false
+	const maxAttempts = 20
+	var lastError error = nil
+
+	for attempts := 0; attempts < maxAttempts; attempts++ {
+		lastError = errors.New("Max attempts exceeded")
+
+		if attempts != 0 {
+			duration := b.Duration()
+			log.Printf("Waiting for attachment to complete. Retrying in %g seconds. Attempts: %d", duration.Seconds(), attempts)
+			time.Sleep(duration)
+		}
+
+		if !attachStarted {
+			_, err := svc.AttachVolume(input)
+			if err != nil {
+				lastError = err
+				continue
+			}
+			attachStarted = true
+			log.Print("Volume attachment started. Checking for status")
+		}
+
 		volumeDescs, err := svc.DescribeVolumes(&ec2.DescribeVolumesInput{
 			VolumeIds: []*string{volume.VolumeId},
 		})
 		if err != nil {
-			return errors.Wrap(err, "Error retrieving volume description status")
+			lastError = err
+			continue
 		}
 
 		volumes := volumeDescs.Volumes
@@ -95,20 +111,29 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 		}
 
 		if *volumes[0].Attachments[0].State == ec2.VolumeAttachmentStateAttached {
+			_, err := os.Stat(blockDevice)
+			if err != nil {
+				lastError = err
+				continue
+			}
+
+			attachSucceeded = true
 			break
 		}
+	}
 
-		duration := b.Duration()
-		log.Printf("Waiting for attachment to complete. Retrying in %g seconds. Current state: %s",
-			duration.Seconds(),
-			*volumes[0].Attachments[0].State)
-		time.Sleep(duration)
+	if !attachSucceeded {
+		return errors.Wrap(lastError, "Attaching volume failed")
 	}
 
 	log.Printf("Attached volume %s to instance %s as device %s\n",
 		*volume.VolumeId, instanceID, blockDevice)
 
 	return nil
+}
+
+func tryAttachingVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) {
+
 }
 
 func ensureVolumeInited(blockDevice, fileSystemFormatType string) error {
