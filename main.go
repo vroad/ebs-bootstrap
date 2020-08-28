@@ -16,6 +16,7 @@ var (
 	blockDevice          string
 	awsRegion            string
 	fileSystemFormatType string
+	maxAttempts          int
 )
 
 func init() {
@@ -25,6 +26,7 @@ func init() {
 	flag.StringVar(&blockDevice, "block-device", "/dev/xvdf", "Block device to attach as")
 	flag.StringVar(&fileSystemFormatType, "filesystem-type", "ext4", "Linux filesystem format type")
 	flag.BoolVar(&useEBS, "use-ebs", true, "Use EBS instead of instance store")
+	flag.IntVar(&maxAttempts, "max-attempts", 20, "Retry attachment until it fails n times")
 	flag.Parse()
 }
 
@@ -53,7 +55,7 @@ func main() {
 			panic(err)
 		}
 
-		err = attachVolume(ec2SVC, instanceID, volume)
+		err = attachVolume(ec2SVC, instanceID, volume, maxAttempts)
 		if err != nil {
 			panic(err)
 		}

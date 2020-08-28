@@ -46,7 +46,7 @@ func volumeFromID(svc *ec2.EC2, volumeID, az string) (*ec2.Volume, error) {
 	return result.Volumes[0], nil
 }
 
-func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
+func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume, maxAttempts int) error {
 	log.Printf("Will attach volume %s to instance id %s\n", *volume.VolumeId, instanceID)
 
 	// check if volume is already attached to this instance (ie, reboot)
@@ -71,7 +71,6 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 
 	var attachStarted = false
 	var attachSucceeded = false
-	const maxAttempts = 20
 	var lastError error = nil
 
 	for attempts := 0; attempts < maxAttempts; attempts++ {
