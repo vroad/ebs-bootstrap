@@ -132,10 +132,6 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) error {
 	return nil
 }
 
-func tryAttachingVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume) {
-
-}
-
 func ensureVolumeInited(blockDevice, fileSystemFormatType string) error {
 	log.Printf("Checking for existing filesystem on device: %s\n", blockDevice)
 
