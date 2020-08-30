@@ -71,6 +71,7 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume, maxAttemp
 
 	var attachStarted = false
 	var attachSucceeded = false
+	var blockDeviceFound = false
 	var lastError error = nil
 
 	for attempts := 0; attempts < maxAttempts; attempts++ {
@@ -92,36 +93,42 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume, maxAttemp
 			log.Print("Volume attachment started. Checking for status")
 		}
 
-		volumeDescs, err := svc.DescribeVolumes(&ec2.DescribeVolumesInput{
-			VolumeIds: []*string{volume.VolumeId},
-		})
-		if err != nil {
-			lastError = err
-			continue
-		}
-
-		volumes := volumeDescs.Volumes
-		if len(volumes) == 0 {
-			continue
-		}
-
-		if len(volumes[0].Attachments) == 0 {
-			continue
-		}
-
-		if *volumes[0].Attachments[0].State == ec2.VolumeAttachmentStateAttached {
-			_, err := os.Stat(blockDevice)
+		if !attachSucceeded {
+			volumeDescs, err := svc.DescribeVolumes(&ec2.DescribeVolumesInput{
+				VolumeIds: []*string{volume.VolumeId},
+			})
 			if err != nil {
 				lastError = err
 				continue
 			}
 
+			volumes := volumeDescs.Volumes
+			if len(volumes) == 0 {
+				continue
+			}
+
+			if len(volumes[0].Attachments) == 0 {
+				continue
+			}
+
+			if *volumes[0].Attachments[0].State != ec2.VolumeAttachmentStateAttached {
+				continue
+			}
+
 			attachSucceeded = true
-			break
 		}
+
+		_, err := os.Stat(blockDevice)
+		if err != nil {
+			lastError = err
+			continue
+		}
+
+		blockDeviceFound = true
+		break
 	}
 
-	if !attachSucceeded {
+	if !blockDeviceFound {
 		return errors.Wrap(lastError, "Attaching volume failed")
 	}
 
