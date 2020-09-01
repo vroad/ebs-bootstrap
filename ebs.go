@@ -64,7 +64,7 @@ func attachVolume(svc *ec2.EC2, instanceID string, volume *ec2.Volume, maxAttemp
 
 	b := &backoff.Backoff{
 		Min:    5 * time.Second,
-		Max:    100 * time.Second,
+		Max:    30 * time.Second,
 		Factor: 2,
 		Jitter: false,
 	}
