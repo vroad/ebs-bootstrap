@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"math"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
@@ -26,7 +27,7 @@ func init() {
 	flag.StringVar(&blockDevice, "block-device", "/dev/xvdf", "Block device to attach as")
 	flag.StringVar(&fileSystemFormatType, "filesystem-type", "ext4", "Linux filesystem format type")
 	flag.BoolVar(&useEBS, "use-ebs", true, "Use EBS instead of instance store")
-	flag.IntVar(&maxAttempts, "max-attempts", 20, "Retry attachment until it fails n times")
+	flag.IntVar(&maxAttempts, "max-attempts", math.MaxInt64, "Retry attachment until it fails n times")
 	flag.Parse()
 }
 
